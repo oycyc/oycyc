@@ -1,0 +1,229 @@
+---
+title: Nimbus Commerce production architecture
+config:
+  layout: elk
+  look: neo
+  theme: base
+  flowchart:
+    curve: basis
+  themeVariables:
+    fontSize: 15px
+    lineColor: "#64748B"
+    primaryTextColor: "#1E293B"
+    titleColor: "#1E293B"
+    edgeLabelBackground: "#FFFFFF"
+---
+flowchart TB
+
+  %% ───────────── Users and clients ─────────────
+  subgraph CLIENTS["Users and clients"]
+    cust@{ shape: person, label: "Customer" }
+    web@{ shape: browser, label: "Web storefront" }
+    mobile@{ icon: "mdi:cellphone", form: "rounded", label: "Mobile app", pos: "b", h: 48 }
+    kiosk@{ shape: curv-trap, label: "In-store kiosk" }
+    form@{ shape: sl-rect, label: "Checkout form" }
+  end
+
+  %% ───────────── Edge and network ─────────────
+  subgraph EDGE["Edge and network"]
+    net@{ shape: bolt, label: "HTTPS / HTTP3" }
+    cdn@{ shape: cloud, label: "Global CDN" }
+    cdnNote@{ shape: brace, label: "95% cache<br>hit rate" }
+    req@{ shape: stadium, label: "API request" }
+    waf@{ shape: trap-b, label: "WAF + rate limit" }
+    bot@{ shape: odd, label: "Bot challenge" }
+    gw@{ shape: hex, label: "API gateway" }
+  end
+
+  %% ───────────── Identity and access ─────────────
+  subgraph IAM["Identity and access"]
+    authq@{ shape: diam, label: "Signed in?" }
+    oidc@{ shape: fr-rect, label: "OIDC login flow" }
+    jwt@{ shape: notch-rect, label: "JWT access token" }
+    rbac@{ shape: div-rect, label: "RBAC check" }
+    opa@{ shape: tag-rect, label: "Policy engine" }
+    sess@{ shape: win-pane, label: "Session cache" }
+  end
+
+  %% ───────────── Core services ─────────────
+  subgraph CORE["Core services on Kubernetes"]
+    cat@{ shape: rect, label: "Catalog service" }
+    cart@{ shape: hourglass, label: "Cart collator" }
+    order@{ shape: st-rect, label: "Order service x6" }
+    placed@{ shape: rounded, label: "OrderPlaced event" }
+    pay@{ shape: lin-rect, label: "Payment service" }
+    pciNote@{ shape: brace-r, label: "PCI-DSS scope" }
+    retry@{ shape: notch-pent, label: "Retry up to 3 times" }
+    backoff@{ shape: delay, label: "Exponential backoff" }
+    fraud@{ shape: bang, label: "Fraud alert" }
+    review@{ shape: trap-t, label: "Manual fraud review" }
+    refund@{ shape: flip-tri, label: "Refund file" }
+    fan@{ shape: fork, label: "Fan-out" }
+    ship@{ shape: rect, label: "Fulfillment service" }
+    notify@{ icon: "mdi:email-fast-outline", form: "square", label: "Notifications", pos: "b", h: 48 }
+    join@{ shape: f-circ, label: "Join" }
+    done@{ shape: dbl-circ, label: "Order<br>complete" }
+  end
+
+  %% ───────────── Third-party ─────────────
+  subgraph EXT["Third-party payments"]
+    chargeReq@{ shape: lean-r, label: "Charge request" }
+    psp@{ icon: "mdi:credit-card-outline", form: "circle", label: "Payment provider", pos: "b", h: 48 }
+    webhook@{ shape: lean-l, label: "Payment webhook" }
+  end
+
+  %% ───────────── Messaging ─────────────
+  subgraph MSG["Messaging"]
+    bus@{ shape: h-cyl, label: "Event bus" }
+    q@{ shape: bow-rect, label: "Order queue" }
+    audit@{ shape: flag, label: "Audit log tape" }
+    msgNote@{ shape: braces, label: "At-least-once,<br>ordered per key" }
+  end
+
+  %% ───────────── Data stores ─────────────
+  subgraph DATA["Data stores"]
+    odb@{ shape: cyl, label: "Orders DB" }
+    search@{ shape: datastore, label: "Search index" }
+    media@{ shape: bucket, label: "Media bucket" }
+    pv@{ shape: lin-cyl, label: "Persistent volumes" }
+    pii@{ shape: tag-doc, label: "Customer PII" }
+    receipt@{ shape: doc, label: "Receipt" }
+    invoices@{ shape: docs, label: "Invoices" }
+  end
+
+  %% ───────────── Analytics ─────────────
+  subgraph ANALYTICS["Analytics pipeline"]
+    nightly@{ shape: sm-circ, label: "Nightly trigger" }
+    extract@{ shape: tri, label: "Extract" }
+    contract@{ shape: lin-doc, label: "Data contract" }
+    kpi@{ shape: cross-circ, label: "KPI rollup" }
+    etlStop@{ shape: fr-circ, label: "Stop" }
+  end
+
+  %% ───────────── Platform and observability ─────────────
+  subgraph OPS["Platform and observability"]
+    sre@{ shape: person, label: "SRE on call" }
+    cli@{ shape: console, label: "Ops CLI" }
+    commit@{ shape: circle, label: "Commit" }
+    repo@{ shape: folder, label: "Git repo" }
+    cd@{ icon: "mdi:rocket-launch-outline", form: "rounded", label: "CD pipeline", pos: "b", h: 48 }
+    dash@{ img: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCAxNjAgOTYiPjxyZWN0IHdpZHRoPSIxNjAiIGhlaWdodD0iOTYiIHJ4PSI4IiBmaWxsPSIjMUYyOTMzIi8+PHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjE0NCIgaGVpZ2h0PSIxMCIgcng9IjMiIGZpbGw9IiMzMjNGNEIiLz48Y2lyY2xlIGN4PSIxNCIgY3k9IjEzIiByPSIyLjUiIGZpbGw9IiMzRUJEOTMiLz48cmVjdCB4PSIyMSIgeT0iMTEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0iIzdCODc5NCIvPjxwb2x5bGluZSBwb2ludHM9IjEwLDYyIDI2LDU0IDQwLDU4IDU0LDQwIDY4LDQ2IDgyLDMwIDk2LDM2IDExMCwyNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDdBM0YzIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBvbHlsaW5lIHBvaW50cz0iMTAsNzIgMjYsNzAgNDAsNjYgNTQsNjggNjgsNjAgODIsNjIgOTYsNTYgMTEwLDU4IiBmaWxsPSJub25lIiBzdHJva2U9IiNGN0M5NDgiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHJlY3QgeD0iMTIwIiB5PSI1OCIgd2lkdGg9IjciIGhlaWdodD0iMjgiIHJ4PSIxLjUiIGZpbGw9IiMzRUJEOTMiLz48cmVjdCB4PSIxMzAiIHk9IjQ0IiB3aWR0aD0iNyIgaGVpZ2h0PSI0MiIgcng9IjEuNSIgZmlsbD0iIzNFQkQ5MyIvPjxyZWN0IHg9IjE0MCIgeT0iNjYiIHdpZHRoPSI3IiBoZWlnaHQ9IjIwIiByeD0iMS41IiBmaWxsPSIjRUY0RTRFIi8+PHJlY3QgeD0iMTIwIiB5PSIyNiIgd2lkdGg9IjI3IiBoZWlnaHQ9IjEyIiByeD0iMyIgZmlsbD0iIzMyM0Y0QiIvPjxyZWN0IHg9IjEyNCIgeT0iMzAiIHdpZHRoPSIxOSIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0iIzlBQTVCMSIvPjxsaW5lIHgxPSIxMCIgeTE9Ijg2IiB4Mj0iMTEyIiB5Mj0iODYiIHN0cm9rZT0iIzUyNjA2RCIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+Cg==", label: "Ops dashboard", pos: "b", w: 160, h: 96, constraint: "on" }
+    slo@{ shape: text, label: "SLO p99 under 300 ms<br>99.95% uptime" }
+  end
+
+  %% ───────────── Request hot path (thick, animated) ─────────────
+  cust --> web & mobile & kiosk
+  web --> form
+  form & mobile & kiosk --> net
+  net e1@==> cdn
+  cdn e2@==>|dynamic| req
+  req e3@==> waf
+  waf e4@==> gw
+  gw e5@==> authq
+  authq e6@==>|yes| rbac
+  rbac e7@==> cart
+  cart e8@==> order
+  order e9@==> q
+  q e10@==> pay
+  pay e11@==>|captured| fan
+  join e12@==> done
+
+  %% ───────────── Supporting flows ─────────────
+  cdn -.->|static| media
+  cdnNote -.- cdn
+  waf -.->|suspicious| bot
+  bot -->|passed| gw
+  authq -->|no| oidc
+  oidc --> jwt
+  jwt -.->|retry| authq
+  rbac <--> opa
+  rbac <--> sess
+  rbac --> cat
+  cat --> search
+  order --> odb
+  order --> pii
+  order -.-> placed
+  placed -.-> bus
+  pay --> chargeReq --> psp --> webhook --> pay
+  pciNote -.- pay
+  pay -.->|declined| retry
+  retry --> backoff
+  backoff -.->|try again| pay
+  pay -->|high risk| fraud
+  fraud --> review
+  review --> refund
+  review --x|cancel| order
+  refund --> invoices
+  fan --> ship & notify
+  ship --> invoices
+  notify --> receipt
+  ship & notify --> join
+  bus --> audit
+  msgNote -.- bus
+  bus -.->|CDC| extract
+  odb --> pv
+  search --> pv
+  nightly --> extract --> contract --> kpi --> etlStop
+  kpi --> dash
+  fraud --o|pages| sre
+  sre --> cli --> cd
+  commit --> repo ==> cd
+  cd ==>|GitOps sync| CORE
+  sre --o dash
+  dash -.- slo
+
+  %% ───────────── Edge animation and styling ─────────────
+  e1@{ animation: fast }
+  e2@{ animation: fast }
+  e3@{ animation: fast }
+  e4@{ animation: fast }
+  e5@{ animation: fast }
+  e6@{ animation: fast }
+  e7@{ animation: fast }
+  e8@{ animation: fast }
+  e9@{ animation: fast }
+  e10@{ animation: fast }
+  e11@{ animation: fast }
+  e12@{ animation: fast }
+  classDef hot stroke:#F97316,stroke-width:3px
+  class e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12 hot
+
+  %% ───────────── Node colours by layer ─────────────
+  classDef client fill:#DBEAFE,stroke:#2563EB,stroke-width:1.5px,color:#1E3A8A
+  classDef edge fill:#EDE9FE,stroke:#7C3AED,stroke-width:1.5px,color:#4C1D95
+  classDef sec fill:#FEE2E2,stroke:#DC2626,stroke-width:1.5px,color:#7F1D1D
+  classDef svc fill:#FFEDD5,stroke:#EA580C,stroke-width:1.5px,color:#7C2D12
+  classDef ext fill:#FEF3C7,stroke:#D97706,stroke-width:1.5px,color:#78350F
+  classDef msg fill:#FCE7F3,stroke:#DB2777,stroke-width:1.5px,color:#831843
+  classDef data fill:#DCFCE7,stroke:#16A34A,stroke-width:1.5px,color:#14532D
+  classDef ana fill:#CFFAFE,stroke:#0891B2,stroke-width:1.5px,color:#164E63
+  classDef ops fill:#E2E8F0,stroke:#475569,stroke-width:1.5px,color:#0F172A
+  classDef note fill:none,stroke:#94A3B8,color:#475569
+  classDef alert fill:#DC2626,stroke:#7F1D1D,stroke-width:2px,color:#FFFFFF
+  classDef solid fill:#334155,stroke:#334155,stroke-width:2px,color:#FFFFFF
+  classDef ok fill:#16A34A,stroke:#14532D,stroke-width:2px,color:#FFFFFF
+
+  class cust,web,mobile,kiosk,form client
+  class net,cdn,req,waf,bot,gw edge
+  class authq,oidc,jwt,rbac,opa,sess sec
+  class cat,cart,order,placed,pay,retry,backoff,review,refund,ship,notify svc
+  class chargeReq,psp,webhook ext
+  class bus,q,audit msg
+  class odb,search,media,pv,pii,receipt,invoices data
+  class extract,contract,kpi ana
+  class sre,cli,commit,repo,cd ops
+  class cdnNote,pciNote,msgNote,slo note
+  class fraud alert
+  class fan,join,nightly,etlStop solid
+  class done ok
+
+  %% ───────────── Layer containers ─────────────
+  style CLIENTS fill:#F5F9FF,stroke:#2563EB,stroke-width:1.5px,stroke-dasharray:6 4,color:#1E3A8A
+  style EDGE fill:#FAF7FF,stroke:#7C3AED,stroke-width:1.5px,stroke-dasharray:6 4,color:#4C1D95
+  style IAM fill:#FFF7F7,stroke:#DC2626,stroke-width:1.5px,stroke-dasharray:6 4,color:#7F1D1D
+  style CORE fill:#FFFAF5,stroke:#EA580C,stroke-width:1.5px,stroke-dasharray:6 4,color:#7C2D12
+  style EXT fill:#FFFCF2,stroke:#D97706,stroke-width:1.5px,stroke-dasharray:6 4,color:#78350F
+  style MSG fill:#FFF7FB,stroke:#DB2777,stroke-width:1.5px,stroke-dasharray:6 4,color:#831843
+  style DATA fill:#F5FFF8,stroke:#16A34A,stroke-width:1.5px,stroke-dasharray:6 4,color:#14532D
+  style ANALYTICS fill:#F3FDFF,stroke:#0891B2,stroke-width:1.5px,stroke-dasharray:6 4,color:#164E63
+  style OPS fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,stroke-dasharray:6 4,color:#0F172A

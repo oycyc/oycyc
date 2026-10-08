@@ -1,7 +1,7 @@
 # aws webapp architecture diagram
 
 ```mermaid
-%%{init: {"fontFamily": "Helvetica, Arial, sans-serif", "flowchart": {"curve": "step", "nodeSpacing": 30, "rankSpacing": 45, "padding": 10}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "fontFamily": "Helvetica, Arial, sans-serif", "flowchart": {"curve": "step", "nodeSpacing": 30, "rankSpacing": 45, "padding": 10}}}%%
 flowchart TB
     users(["Users<br/>web and mobile"])
     gha[["GitHub Actions<br/>CI/CD pipeline"]]

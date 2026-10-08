@@ -1,6 +1,6 @@
 # Nimbus Commerce architecture
 
-An example platform drawn as a single Mermaid flowchart that uses every flowchart node shape, including icon and image.
+An example platform drawn as a single Mermaid flowchart that uses every built-in flowchart node shape, plus one embedded image.
 
 ## Live Mermaid render
 
@@ -26,7 +26,7 @@ flowchart TB
   subgraph CLIENTS["Users and clients"]
     cust@{ shape: person, label: "Customer" }
     web@{ shape: browser, label: "Web storefront" }
-    mobile@{ icon: "mdi:cellphone", form: "rounded", label: "Mobile app", pos: "b", h: 48 }
+    mobile@{ shape: rounded, label: "Mobile app" }
     kiosk@{ shape: curv-trap, label: "In-store kiosk" }
     form@{ shape: sl-rect, label: "Checkout form" }
   end
@@ -67,7 +67,7 @@ flowchart TB
     refund@{ shape: flip-tri, label: "Refund file" }
     fan@{ shape: fork, label: "Fan-out" }
     ship@{ shape: rect, label: "Fulfillment service" }
-    notify@{ icon: "mdi:email-fast-outline", form: "square", label: "Notifications", pos: "b", h: 48 }
+    notify@{ shape: odd, label: "Notifications" }
     join@{ shape: f-circ, label: "Join" }
     done@{ shape: dbl-circ, label: "Order<br>complete" }
   end
@@ -75,7 +75,7 @@ flowchart TB
   %% ───────────── Third-party ─────────────
   subgraph EXT["Third-party payments"]
     chargeReq@{ shape: lean-r, label: "Charge request" }
-    psp@{ icon: "mdi:credit-card-outline", form: "circle", label: "Payment provider", pos: "b", h: 48 }
+    psp@{ shape: fr-rect, label: "Payment provider" }
     webhook@{ shape: lean-l, label: "Payment webhook" }
   end
 
@@ -113,7 +113,7 @@ flowchart TB
     cli@{ shape: console, label: "Ops CLI" }
     commit@{ shape: circle, label: "Commit" }
     repo@{ shape: folder, label: "Git repo" }
-    cd@{ icon: "mdi:rocket-launch-outline", form: "rounded", label: "CD pipeline", pos: "b", h: 48 }
+    cd@{ shape: hex, label: "CD pipeline" }
     dash@{ img: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCAxNjAgOTYiPjxyZWN0IHdpZHRoPSIxNjAiIGhlaWdodD0iOTYiIHJ4PSI4IiBmaWxsPSIjMUYyOTMzIi8+PHJlY3QgeD0iOCIgeT0iOCIgd2lkdGg9IjE0NCIgaGVpZ2h0PSIxMCIgcng9IjMiIGZpbGw9IiMzMjNGNEIiLz48Y2lyY2xlIGN4PSIxNCIgY3k9IjEzIiByPSIyLjUiIGZpbGw9IiMzRUJEOTMiLz48cmVjdCB4PSIyMSIgeT0iMTEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0iIzdCODc5NCIvPjxwb2x5bGluZSBwb2ludHM9IjEwLDYyIDI2LDU0IDQwLDU4IDU0LDQwIDY4LDQ2IDgyLDMwIDk2LDM2IDExMCwyNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDdBM0YzIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBvbHlsaW5lIHBvaW50cz0iMTAsNzIgMjYsNzAgNDAsNjYgNTQsNjggNjgsNjAgODIsNjIgOTYsNTYgMTEwLDU4IiBmaWxsPSJub25lIiBzdHJva2U9IiNGN0M5NDgiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHJlY3QgeD0iMTIwIiB5PSI1OCIgd2lkdGg9IjciIGhlaWdodD0iMjgiIHJ4PSIxLjUiIGZpbGw9IiMzRUJEOTMiLz48cmVjdCB4PSIxMzAiIHk9IjQ0IiB3aWR0aD0iNyIgaGVpZ2h0PSI0MiIgcng9IjEuNSIgZmlsbD0iIzNFQkQ5MyIvPjxyZWN0IHg9IjE0MCIgeT0iNjYiIHdpZHRoPSI3IiBoZWlnaHQ9IjIwIiByeD0iMS41IiBmaWxsPSIjRUY0RTRFIi8+PHJlY3QgeD0iMTIwIiB5PSIyNiIgd2lkdGg9IjI3IiBoZWlnaHQ9IjEyIiByeD0iMyIgZmlsbD0iIzMyM0Y0QiIvPjxyZWN0IHg9IjEyNCIgeT0iMzAiIHdpZHRoPSIxOSIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0iIzlBQTVCMSIvPjxsaW5lIHgxPSIxMCIgeTE9Ijg2IiB4Mj0iMTEyIiB5Mj0iODYiIHN0cm9rZT0iIzUyNjA2RCIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+Cg==", label: "Ops dashboard", pos: "b", w: 160, h: 96, constraint: "on" }
     slo@{ shape: text, label: "SLO p99 under 300 ms<br>99.95% uptime" }
   end

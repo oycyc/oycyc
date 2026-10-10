@@ -1,5 +1,3 @@
-## ML workflow architecture
-
 ```mermaid
 %%{init: {"layout": "dagre", "look": "classic", "fontFamily": "Helvetica, Arial, sans-serif", "flowchart": {"curve": "stepAfter", "nodeSpacing": 30, "rankSpacing": 40, "padding": 14}}}%%
 flowchart TB
@@ -116,34 +114,3 @@ flowchart TB
     %% Edge colors: indexes come from the edge list printed by scripts/check_diagram.py
     linkStyle 4,13,14 stroke:#8C4FFF,stroke-width:2.5px
 ```
-
-The workflow runs in two rows: **Build** (stages 1 and 2) turns raw data into a trained model, and **Run** (stages 3 to 5) releases, serves and monitors it.
-
-1. **Data preparation:** source data lands in S3. Glue ETL jobs turn it into features and store them in SageMaker Feature Store.
-2. **Training:** data scientists build and run a SageMaker Pipeline from SageMaker Studio (processing, training and evaluation). A model that passes evaluation is registered in the Model Registry.
-3. **Release:** an approved model version in the Model Registry triggers CodePipeline to deploy it.
-4. **Inference:** client apps call the real-time SageMaker endpoint through API Gateway and a Lambda handler.
-5. **Monitoring:** Model Monitor checks captured requests for drift and publishes metrics to CloudWatch. A drift alarm fires an EventBridge rule that starts a new pipeline run (the retraining loop back to stage 2, shown as a label rather than a line so it doesn't cross the diagram).
-
-**Shapes**
-
-| Shape | Meaning |
-|---|---|
-| Person | People |
-| Browser window | Client applications |
-| Cloud | Data sources outside AWS |
-| Hexagon | Request routing (API Gateway) |
-| Flag | Event-driven functions (Lambda) |
-| Rectangle with side bars | Multi-step jobs: Glue ETL, pipeline steps |
-| Rectangle | Long-running compute (SageMaker endpoint) |
-| Rounded rectangle | Managed services: Studio, Model Monitor, CloudWatch |
-| Stacked cards (blue) | CI/CD pipeline |
-| Bucket | S3 buckets |
-| Cylinder | Stores and registries: Feature Store, Model Registry |
-| Parallelogram | Event bus (EventBridge) |
-| Dashed box | One stage of the workflow |
-| Dotted box | A row of stages: Build or Run |
-
-**Colors:** teal = SageMaker (machine learning) · green = storage · magenta = data stores · purple = networking and analytics · orange = compute · pink = monitoring and events · blue = CI/CD · dark = outside AWS
-
-**Lines:** thick purple = inbound inference requests · solid = data flow and service calls, including the plain arrows from one stage to the next · dotted = people working in the system

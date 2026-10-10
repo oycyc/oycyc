@@ -22,7 +22,7 @@ flowchart TB
 
             subgraph train["2 · Training · SageMaker Pipelines"]
                 direction TB
-                studio("SageMaker Studio<br/>pipeline authoring")
+                studio("SageMaker<br/>Studio")
                 proc[["Processing<br/>job"]]
                 trn[["Training<br/>job"]]
                 evalstep[["Evaluate<br/>metrics"]]
@@ -41,8 +41,8 @@ flowchart TB
             subgraph serve["4 · Inference"]
                 direction TB
                 apigw{{"API Gateway<br/>REST API"}}
-                fnInfer>"Lambda<br/>inference handler"]
-                ep["SageMaker endpoint<br/>real-time"]
+                fnInfer>"Lambda<br/>predict handler"]
+                ep["SageMaker<br/>endpoint<br/>real-time"]
             end
 
             subgraph monitor["5 · Monitoring"]
@@ -63,7 +63,10 @@ flowchart TB
     scientists -.-> build
     prep e1@--> train
     build -->|register model| run
-    apps ==>|HTTPS 443| run
+    %% Client apps sit below the Run row so their line runs straight up into it; from above
+    %% or the side it would cut through the Build row. Arrowheads only point down the layout,
+    %% so this request path is drawn as a thick line without one.
+    run ===|HTTPS 443| apps
     deploy e2@--> serve
     serve e3@--> monitor
     %% Straight horizontal arrows between stages: the default stepAfter curve tilts their arrowheads
